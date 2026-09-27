@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ember & Oak — Coffee Roasters</title>
+  <style>
+    :root {
+      --cream: #faf6f0;
+      --sand: #f3ead9;
+      --espresso: #2b1d16;
+      --coffee: #4a3428;
+      --caramel: #c98a4b;
+      --caramel-deep: #a96a32;
+      --sage: #7d8b74;
+      --white: #ffffff;
+      --ink-soft: #6f5f52;
+      --shadow: 0 20px 50px rgba(43, 29, 22, 0.12);
+      --radius: 24px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      background: var(--cream);
+      color: var(--espresso);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    ::selection { background: var(--caramel); color: var(--white); }
+
+    h1, h2, h3 {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-weight: 600;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+    }
+
+    img { max-width: 100%; display: block; }
+    a { text-decoration: none; color: inherit; }
+
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* ---------- Header ---------- */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      transition: background 0.35s ease, box-shadow 0.35s ease;
+      background: rgba(250, 246, 240, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    header.scrolled {
+      box-shadow: 0 4px 24px rgba(43, 29, 22, 0.08);
+      background: rgba(250, 246, 240, 0.96);
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 76px;
+    }
+
+    .logo {
+      font-family: 'Georgia', serif;
+      font-size: 1.45rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logo-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--espresso);
+      color: var(--cream);
+      display: grid;
+      place-items: center;
+      font-size: 1rem;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2.2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: var(--coffee);
+      position: relative;
+      transition: color 0.25s ease;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -6px;
+      width: 0;
+      height: 2px;
+      background: var(--caramel);
+      transition: width 0.25s ease;
+    }
+
+    .nav-links a:hover { color: var(--caramel-deep); }
+    .nav-links a:hover::after { width: 100%; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.85rem 1.7rem;
+      border: none;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+    }
+
+    .btn-primary {
+      background: var(--espresso);
+      color: var(--cream);
+    }
+
+    .btn-primary:hover {
+      background: var(--caramel-deep);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(169, 106, 50, 0.35);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--espresso);
+      border: 1.5px solid var(--espresso);
+    }
+
+    .btn-ghost:hover {
+      background: var(--espresso);
+      color: var(--cream);
+      transform: translateY(-2px);
+    }
+
+    .nav-cta { padding: 0.65rem 1.4rem; font-size: 0.9rem; }
+
+    .burger {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      position: relative;
+    }
+
+    .burger span {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      height: 2px;
+      background: var(--espresso);
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+
+    .burger span:nth-child(1) { top: 13px; }
+    .burger span:nth-child(2) { top: 19px; }
+    .burger span:nth-child(3) { top: 26px; }
+
+    .burger.open span:nth-child(1) { top: 19px; transform: rotate(45deg); }
+    .burger.open span:nth-child(2) { opacity: 0; }
+    .burger.open span:nth-child(3) { top: 19px; transform: rotate(-45deg); }
+
+    /* ---------- Hero ---------- */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      padding: 8rem 0 5rem;
+      background:
+        radial-gradient(ellipse 60% 50% at 85% 15%, rgba(201, 138, 75, 0.14), transparent 60%),
+        radial-gradient(ellipse 50% 40% at 10% 90%, rgba(125, 139, 116, 0.12), transparent 60%),
+        var(--cream);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--caramel-deep);
+      margin-bottom: 1.4rem;
+    }
+
+    .eyebrow::before {
+      content: '';
+      width: 28px;
+      height: 1.5px;
+      background: var(--caramel);
+    }
+
+    .hero h1 {
+      font-size: clamp(2.8rem, 5.4vw, 4.4rem);
+      margin-bottom: 1.4rem;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--caramel-deep);
+    }
+
+    .hero p.lead {
+      font-size: 1.12rem;
+      color: var(--ink-soft);
+      max-width: 32rem;
+      margin-bottom: 2.4rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 3.2rem;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 2.8rem;
+    }
+
+    .stat .stat-num {
+      font-family: 'Georgia', serif;
+      font-size: 1.9rem;
+      font-weight: 600;
+      color: var(--espresso);
+    }
+
+    .stat .stat-label {
+      font-size: 0.82rem;
+      color: var(--ink-soft);
+      letter-spacing: 0.04em;
+    }
+
+    .hero-visual {
+      position: relative;
+      display: flex;
+      justify-content: center;
+    }
+
+    .hero-card {
+      position: relative;
+      width: min(100%, 440px);
+      aspect-ratio: 4 / 5;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      background: linear-gradient(160deg, var(--espresso) 0%, #4a3428 55%, var(--caramel-deep) 130%);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 2.2rem;
+      color: var(--cream);
+    }
+
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(250, 246, 240, 0.1), transparent 45%);
+      pointer-events: none;
+    }
+
+    .steam {
+      position: absolute;
+      top: 18%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 14px;
+      opacity: 0.75;
+    }
+
+    .steam span {
+      width: 3px;
+      height: 46px;
+      border-radius: 3px;
+      background: linear-gradient(to top, transparent, rgba(250, 246, 240, 0.85));
+      animation: rise 2.6s ease-in-out infinite;
+    }
+
+    .steam span:nth-child(1) { animation-delay: 0s; }
+    .steam span:nth-child(2) { animation-delay: 0.8s; height: 56px; }
+    .steam span:nth-child(3) { animation-delay: 1.5s; }
+
+    @keyframes rise {
+      0%, 100% { transform: translateY(8px); opacity: 0.3; }
+      50% { transform: translateY(-10px); opacity: 0.85; }
+    }
+
+    .cup {
+      position: relative;
+      z-index: 1;
+      margin: 0 auto 1.6rem;
+      width: 150px;
+      height: 90px;
+      border: 6px solid var(--cream);
+      border-top: none;
+      border-radius: 0 0 80px 80px;
+      background: rgba(250, 246, 240, 0.08);
+    }
+
+    .cup::before {
+      content: '';
+      position: absolute;
+      right: -38px;
+      top: 8px;
+      width: 34px;
+      height: 44px;
+      border: 6px solid var(--cream);
+      border-left: none;
+      border-radius: 0 40px 40px 0;
+    }
+
+    .cup::after {
+      content: '';
+      position: absolute;
+      left: -14px;
+      bottom: -26px;
+      width: 178px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(250, 246, 240, 0.18);
+    }
+
+    .hero-card h3 {
+      font-size: 1.7rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .hero-card p {
+      font-size: 0.95rem;
+      opacity: 0.85;
+    }
+
+    .badge {
+      position: absolute;
+      top: 1.4rem;
+      right: 1.4rem;
+      background: var(--cream);
+      color: var(--espresso);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      z-index: 2;
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(8px); }
+    }
+
+    /* ---------- Section headers ---------- */
+    .section { padding: 6.5rem 0; }
+
+    .section-head {
+      text-align: center;
+      max-width: 620px;
+      margin: 0 auto 3.5rem;
+    }
+
+    .section-head h2 {
+      font-size: clamp(2.1rem, 3.6vw, 3rem);
+      margin-bottom: 1rem;
+    }
+
+    .section-head p {
+      color: var(--ink-soft);
+      font-size: 1.05rem;
+    }
+
+    /* ---------- Marquee ---------- */
+    .marquee {
+      background: var(--espresso);
+      color: var(--cream);
+      overflow: hidden;
+      padding: 1rem 0;
+    }
+
+    .marquee-track {
+      display: flex;
+      gap: 3rem;
+      width: max-content;
+      animation: marquee 26s linear infinite;
+      font-family: 'Georgia', serif;
+      font-size: 1.05rem;
+      font-style: italic;
+    }
+
+    .marquee-track span { white-space: nowrap; }
+
+    @keyframes marquee { to { transform: translateX(-50%); } }
+
+    /* ---------- Menu ---------- */
+    .menu { background: var(--white); }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2rem;
+    }
+
+    .menu-card {
+      background: var(--cream);
+      border-radius: var(--radius);
+      padding: 2.2rem;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .menu-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--caramel);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .menu-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow);
+    }
+
+    .menu-card:hover::before { opacity: 1; }
+
+    .menu-card h3 {
+      font-size: 1.35rem;
+      margin-bottom: 0.4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+    }
+
+    .price {
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--caramel-deep);
+      white-space: nowrap;
+    }
+
+    .menu-card p {
+      color: var(--ink-soft);
+      font-size: 0.95rem;
+    }
+
+    .menu-tag {
+      display: inline-block;
+      margin-top: 1rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--sage);
+    }
+
+    /* ---------- Reviews ---------- */
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+
+    .review-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 2.2rem;
+      box-shadow: 0 8px 30px rgba(43, 29, 22, 0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .review-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow);
+    }
+
+    .stars { color: var(--caramel); letter-spacing: 0.15em; font-size: 1.05rem; }
+
+    .review-card blockquote {
+      font-size: 1rem;
+      color: var(--coffee);
+      flex: 1;
+      font-style: italic;
+    }
+
+    .reviewer {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+
+    .avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--white);
+      flex-shrink: 0;
+    }
+
+    .avatar.a1 { background: var(--caramel-deep); }
+    .avatar.a2 { background: var(--sage); }
+    .avatar.a3 { background: var(--espresso); }
+
+    .reviewer-name { font-weight: 600; font-size: 0.95rem; }
+    .reviewer-role { font-size: 0.82rem; color: var(--ink-soft); }
+
+    /* ---------- Contact ---------- */
+    .contact { background: var(--espresso); color: var(--cream); }
+
+    .contact .section-head h2, .contact .section-head p { color: var(--cream); }
+    .contact .section-head p { opacity: 0.8; }
+    .contact .eyebrow { color: var(--caramel); }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: start;
+    }
+
+    .contact-info h3 {
+      font-size: 1.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .contact-info > p {
+      opacity: 0.8;
+      margin-bottom: 2.2rem;
+      max-width: 26rem;
+    }
+
+    .info-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .info-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: rgba(250, 246, 240, 0.1);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      font-size: 1.05rem;
+    }
+
+    .info-item strong { display: block; font-size: 0.95rem; margin-bottom: 0.15rem; }
+    .info-item span { font-size: 0.9rem; opacity: 0.75; }
+
+    .contact-form {
+      background: var(--white);
+      color: var(--espresso);
+      border-radius: var(--radius);
+      padding: 2.4rem;
+      box-shadow: var(--shadow);
+    }
+
+    .contact-form h3 {
+      font-size: 1.4rem;
+      margin-bottom: 1.6rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-group { margin-bottom: 1rem; }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 1.5px solid #e5ddd0;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      color: var(--espresso);
+      background: #fdfbf8;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .form-group textarea { resize: vertical; min-height: 110px; }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--caramel);
+      box-shadow: 0 0 0 3px rgba(201, 138, 75, 0.15);
+    }
+
+    .form-submit { width: 100%; margin-top: 0.4rem; }
+
+    .form-note {
+      font-size: 0.8rem;
+      color: var(--ink-soft);
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .form-success {
+      display: none;
+      text-align: center;
+      padding: 2rem 0 1rem;
+    }
+
+    .form-success.show { display: block; }
+
+    .success-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #e3efe0;
+      color: var(--sage);
+      display: grid;
+      place-items: center;
+      margin: 0 auto 1.2rem;
+      font-size: 1.5rem;
+    }
+
+    /* ---------- Footer ---------- */
+    footer {
+      background: #1f150f;
+      color: rgba(250, 246, 240, 0.7);
+      padding: 2.5rem 0;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    footer .logo { justify-content: center; margin-bottom: 1rem; color: var(--cream); }
+    footer .logo-mark { background: var(--caramel); color: var(--espresso); }
+
+    /* ---------- Reveal animation ---------- */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 900px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 3rem; }
+      .hero { padding-top: 7rem; text-align: center; }
+      .hero p.lead { margin-left: auto; margin-right: auto; }
+      .hero-actions, .hero-stats { justify-content: center; }
+      .eyebrow { justify-content: center; }
+      .hero-card { margin: 0 auto; }
+      .menu-grid, .contact-grid { grid-template-columns: 1fr; }
+      .reviews-grid { grid-template-columns: 1fr; max-width: 520px; margin: 0 auto; }
+      .nav-links {
+        position: fixed;
+        top: 76px;
+        left: 0;
+        right: 0;
+        background: var(--cream);
+        flex-direction: column;
+        padding: 2rem;
+        gap: 1.6rem;
+        box-shadow: 0 12px 24px rgba(43, 29, 22, 0.1);
+        transform: translateY(-120%);
+        transition: transform 0.3s ease;
+      }
+      .nav-links.open { transform: translateY(0); }
+      .burger { display: block; }
+      .nav-cta { display: none; }
+    }
+
+    @media (max-width: 560px) {
+      .container { padding: 0 1.25rem; }
+      .hero-stats { gap: 1.4rem; }
+      .stat .stat-num { font-size: 1.5rem; }
+      .form-row { grid-template-columns: 1fr; }
+      .contact-form { padding: 1.8rem; }
+      .section { padding: 4.5rem 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Header ===== -->
+  <header id="header">
+    <div class="container nav">
+      <a href="#home" class="logo"><span class="logo-mark">E</span>Ember &amp; Oak</a>
+      <nav>
+        <ul class="nav-links" id="navLinks">
+          <li><a href="#menu">Menu</a></li>
+          <li><a href="#reviews">Reviews</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </nav>
+      <a href="#contact" class="btn btn-primary nav-cta">Order Ahead</a>
+      <button class="burger" id="burger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== Hero ===== -->
+  <section class="hero" id="home">
+    <div class="container hero-grid">
+      <div class="reveal">
+        <span class="eyebrow">Small Batch · Big Heart</span>
+        <h1>Start slow.<br />Sip <em>something</em> worth remembering.</h1>
+        <p class="lead">
+          We roast single-origin beans in small batches every week, then pull each shot
+          with the patience it deserves. No rush, no shortcuts — just honest coffee,
+          baked goods, and a corner that feels like yours.
+        </p>
+        <div class="hero-actions">
+          <a href="#menu" class="btn btn-primary">Explore the Menu →</a>
+          <a href="#contact" class="btn btn-ghost">Visit Us Today</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat">
+            <div class="stat-num" data-count="12">0</div>
+            <div class="stat-label">Single Origins</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num" data-count="4800">0</div>
+            <div class="stat-label">Cups a Week</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num" data-count="9">0</div>
+            <div class="stat-label">Years Roasting</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual reveal">
+        <div class="hero-card">
+          <span class="badge">Roasted Today</span>
+          <div class="steam"><span></span><span></span><span></span></div>
+          <div class="cup"></div>
+          <h3>The Morning Ritual</h3>
+          <p>Ethiopia Yirgacheffe — bright citrus, honeyed finish, roasted light.</p>
+        </div>
+      </div>
+    </div>
+    <div class="scroll-hint">Scroll ↓</div>
+  </section>
+
+  <!-- ===== Marquee ===== -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <span>☕ Freshly roasted every Tuesday</span><span>✦</span>
+      <span>Oat, almond &amp; whole milk, always free</span><span>✦</span>
+      <span>House-baked pastries at 7am sharp</span><span>✦</span>
+      <span>☕ Freshly roasted every Tuesday</span><span>✦</span>
+      <span>Oat, almond &amp; whole milk, always free</span><span>✦</span>
+      <span>House-baked pastries at 7am sharp</span><span>✦</span>
+    </div>
+  </div>
+
+  <!-- ===== Menu ===== -->
+  <section class="section menu" id="menu">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">The Menu</span>
+        <h2>Crafted for the way you take it</h2>
+        <p>From a quick flat white to a slow Sunday pour-over, everything on the bar is made to order with beans roasted in-house.</p>
+      </div>
+      <div class="menu-grid">
+        <div class="menu-card reveal">
+          <h3>House Espresso <span class="price">$3.75</span></h3>
+          <p>Our signature blend — dark chocolate, toasted hazelnut, a long caramel finish.</p>
+          <span class="menu-tag">Espresso · Milk · Iced</span>
+        </div>
+        <div class="menu-card reveal">
+          <h3>Pour Over <span class="price">$5.50</span></h3>
+          <p>A rotating single origin, brewed by hand. Ask your barista what's pouring this week.</p>
+          <span class="menu-tag">Single Origin · Rotating</span>
+        </div>
+        <div class="menu-card reveal">
+          <h3>Cold Brew Tonic <span class="price">$5.25</span></h3>
+          <p>18-hour steeped cold brew over tonic with a twist of grapefruit and rosemary.</p>
+          <span class="menu-tag">Cold · Bright · Botanical</span>
+        </div>
+        <div class="menu-card reveal">
+          <h3>Cardamom Bun <span class="price">$4.75</span></h3>
+          <p>Baked fresh each morning — flaky, swirled with cardamom sugar, finished with pearl sugar.</p>
+          <span class="menu-tag">House-Baked · 7am–Sold Out</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Reviews ===== -->
+  <section class="section" id="reviews" style="background: var(--sand);">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Kind Words</span>
+        <h2>What the neighborhood says</h2>
+        <p>Four thousand cups a week, and somehow the best part is still the people who drink them.</p>
+      </div>
+      <div class="reviews-grid">
+        <div class="review-card reveal">
+          <div class="stars">★★★★★</div>
+          <blockquote>"The pour-over here ruined every other coffee shop for me. They take it seriously, but never make you feel like you have to. It's my favorite room in the city."</blockquote>
+          <div class="reviewer">
+            <div class="avatar a1">MK</div>
+            <div>
+              <div class="reviewer-name">Maya K.</div>
+              <div class="reviewer-role">Regular since 2019</div>
+            </div>
+          </div>
+        </div>
+        <div class="review-card reveal">
+          <div class="stars">★★★★★</div>
+          <blockquote>"I work remotely two days a week and this is the only place with fast wifi, real outlets, and zero pressure to keep ordering. The cardamom buns are a legitimate personality trait now."</blockquote>
+          <div class="reviewer">
+            <div class="avatar a2">DR</div>
+            <div>
+              <div class="reviewer-name">Daniel R.</div>
+              <div class="reviewer-role">Remote designer</div>
+            </div>
+          </div>
+        </div>
+        <div class="review-card reveal">
+          <div class="stars">★★★★★</div>
+          <blockquote>"Brought my dad here for his birthday and the team wrote 'happy birthday pops' in latte art. He framed a photo of it. Ten out of ten, would cry again."</blockquote>
+          <div class="reviewer">
+            <div class="avatar a3">SL</div>
+            <div>
+              <div class="reviewer-name">Sofia L.</div>
+              <div class="reviewer-role">Birthday guest's daughter</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Contact ===== -->
+  <section class="section contact" id="contact">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Say Hello</span>
+        <h2>Come find your corner</h2>
+        <p>Questions, catering requests, or just want to tell us about your perfect cup? We'd love to hear from you.</p>
+      </div>
+      <div class="contact-grid">
+        <div class="contact-info reveal">
+          <h3>Ember &amp; Oak Coffee Roasters</h3>
+          <p>Roasting and pouring in the heart of the warehouse district since 2017. Pull up a chair — the good ones go fast.</p>
+          <div class="info-item">
+            <div class="info-icon">📍</div>
+            <div><strong>Find us</strong><span>418 Foundry Lane, Suite 3 · Portland, OR</span></div>
+          </div>
+          <div class="info-item">
+            <div class="info-icon">🕞</div>
+            <div><strong>Hours</strong><span>Mon–Fri 7am–6pm · Sat–Sun 8am–5pm</span></div>
+          </div>
+          <div class="info-item">
+            <div class="info-icon">☎</div>
+            <div><strong>Call us</strong><span>(503) 555-0184</span></div>
+          </div>
+          <div class="info-item">
+            <div class="info-icon">✉</div>
+            <div><strong>Email</strong><span>hello@emberandoak.coffee</span></div>
+          </div>
+        </div>
+
+        <form class="contact-form reveal" id="contactForm">
+          <h3>Send us a note</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="name">Name</label>
+              <input type="text" id="name" name="name" placeholder="Your name" required />
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" placeholder="you@example.com" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="topic">What's this about?</label>
+            <select id="topic" name="topic" required>
+              <option value="">Choose a topic…</option>
+              <option value="general">General question</option>
+              <option value="catering">Catering &amp; events</option>
+              <option value="wholesale">Wholesale beans</option>
+              <option value="feedback">Feedback</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" placeholder="Tell us what's on your mind…" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary form-submit">Send Message ✦</button>
+          <p class="form-note">We reply within one business day — usually with a recommendation.</p>
+          <div class="form-success" id="formSuccess">
+            <div class="success-icon">✓</div>
+            <h3>Thanks — message received!</h3>
+            <p style="color: var(--ink-soft); font-size: 0.95rem; margin-top: 0.5rem;">We'll pour over your note and get back to you soon.</p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Footer ===== -->
+  <footer>
+    <div class="container">
+      <div class="logo"><span class="logo-mark">E</span>Ember &amp; Oak</div>
+      <p>© 2025 Ember &amp; Oak Coffee Roasters · Roasted with patience in Portland, OR</p>
+    </div>
+  </footer>
+
+  <script>
+    // Header shadow on scroll
+    const header = document.getElementById('header');
+    window.addEventListener('scroll', () => {
+      header.classList.toggle('scrolled', window.scrollY > 20);
+    });
+
+    // Mobile nav toggle
+    const burger = document.getElementById('burger');
+    const navLinks = document.getElementById('navLinks');
+    burger.addEventListener('click', () => {
+      burger.classList.toggle('open');
+      navLinks.classList.toggle('open');
+    });
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        burger.classList.remove('open');
+        navLinks.classList.remove('open');
+      });
+    });
+
+    // Scroll reveal
+    const revealEls = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    revealEls.forEach(el => revealObserver.observe(el));
+
+    // Animated counters
+    const counters = document.querySelectorAll('.stat-num');
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const target = parseInt(el.dataset.count, 10);
+          const duration = 1600;
+          const start = performance.now();
+          const tick = (now) => {
+            const progress = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = Math.floor(target * eased).toLocaleString();
+            if (progress < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+          counterObserver.unobserve(el);
+        }
+      });
+    }, { threshold: 0.6 });
+    counters.forEach(c => counterObserver.observe(c));
+
+    // Contact form
+    const form = document.getElementById('contactForm');
+    const success = document.getElementById('formSuccess');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      form.style.display = 'none';
+      success.classList.add('show');
+    });
+  </script>
+</body>
+</html>
